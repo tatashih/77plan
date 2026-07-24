@@ -124,13 +124,19 @@ input:focus{border-color:var(--tata)}
 .arow{display:flex;gap:8px;margin:14px 0}
 .aslot{border-radius:11px;padding:9px 6px;text-align:center;font-size:13.5px;border:1.5px solid var(--line)}
 .aslots{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.aslot.open{color:var(--soft);background:#FCFAF7}
+.aslot.open{color:var(--soft);background:#FCFAF7;cursor:pointer}
 .aslot.bk{cursor:pointer;color:#fff;font-weight:500;border:none}
 .aslot .t{font-variant-numeric:tabular-nums;opacity:.85;font-size:12px}
 .aslot .n{font-weight:600;font-size:14.5px;margin-top:1px}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
 .panel label{font-size:13px;color:var(--soft);display:block;margin:10px 0 5px}
-input[type=date]{width:100%;font:inherit;font-size:16px;padding:12px;border:1.5px solid var(--line);border-radius:11px;background:#FCFAF7;color:var(--ink)}
+input[type=date],input[type=time]{width:100%;font:inherit;font-size:16px;padding:12px;border:1.5px solid var(--line);border-radius:11px;background:#FCFAF7;color:var(--ink)}
+.reqlink{display:inline-block;margin-top:16px;color:var(--tata);font-size:14px;font-weight:600;cursor:pointer;text-decoration:underline}
+.reqday{margin-bottom:16px}
+.reqday-t{font-size:13px;color:var(--soft);margin-bottom:6px}
+.reqtime{display:flex;align-items:center;gap:8px;margin-top:8px}
+.reqtime input{flex:1}
+.reqtime span{color:var(--soft)}
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
 .chip{border:1.5px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;background:#FCFAF7}
 .chip[data-on="1"]{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -191,7 +197,9 @@ function demo(p){
   if(p.action==="book"){const b=_demoBook[p.date+" "+p.time];
     if(b) return {ok:false,taken:true,msg:"這個時段剛剛被預約了，請重新選擇"};
     return {ok:true,code:"9P"+Date.now().toString().slice(-6),date:p.date,time:p.time};}
+  if(p.action==="request") return {ok:true};
   if(p.action==="addSlots") return {ok:true,added:p.times.length};
+  if(p.action==="delSlot")  return {ok:true};
   if(p.action==="cancel")   return {ok:true};
   return {ok:false,msg:"demo"};
 }
@@ -212,9 +220,9 @@ window.addEventListener("hashchange",route);
 window.addEventListener("DOMContentLoaded",route);
 
 /* ═══════════ 前台：預約 ═══════════ */
-const form = {name:"",age:"",photo:"",referrer:"",dayType:"",period:"",date:"",time:""};
+const form = {name:"",age:"",photo:"",referrer:"",dayType:"",period:"",date:"",time:"",mode:"book"};
 async function customer(){
-  form.referrer="";form.dayType="";form.period="";form.date="";form.time="";
+  form.referrer="";form.dayType="";form.period="";form.date="";form.time="";form.mode="book";
   $("#app").innerHTML='<div class="spin"></div>';
   let res; try{res=await call({action:"slots"});}catch(e){res={ok:false};}
   const dates = (res&&res.ok)?res.dates:[];
@@ -259,8 +267,21 @@ async function customer(){
     </div>
     <div class="card">
       <div class="step"><div class="num">5</div><h3>選擇時段<span class="req">＊</span></h3></div>
-      <div class="hint" style="margin-left:0">先選平日／假日，再選時段區間，最後挑一個時間。</div>
-      <div id="slotpicker"></div>
+      <div id="slotArea">
+        <div class="hint" style="margin-left:0">先選平日／假日，再選時段區間，最後挑一個時間。</div>
+        <div id="slotpicker"></div>
+        <div class="reqlink" id="toReq">以上時段都無法配合？　另行申請其他時段 →</div>
+      </div>
+      <div id="reqArea" style="display:none">
+        <div class="hint" style="margin-left:0">填寫你方便的時間（至少一個，最多三個），我們會另行為你安排。</div>
+        ${[0,1,2].map(i=>`
+        <div class="reqday">
+          <div class="reqday-t">第 ${i+1} 天${i>0?'（選填）':''}</div>
+          <input type="date" id="req${i}_d">
+          <div class="reqtime"><input type="time" id="req${i}_s"><span>—</span><input type="time" id="req${i}_e"></div>
+        </div>`).join("")}
+        <div class="reqlink" id="toSlot">← 回到選擇現有時段</div>
+      </div>
     </div>
     <div class="submit"><button class="btn" id="go" disabled>送出預約</button></div>
   </div>`;
@@ -273,7 +294,32 @@ async function customer(){
     document.querySelectorAll("#refs .ref").forEach(x=>x.dataset.on="0");
     el.dataset.on="1";form.referrer=el.dataset.r;check();});
   renderSlots();
+  // 模式切換：現有時段 ↔ 另行申請
+  $("#toReq").onclick=()=>setMode("request");
+  $("#toSlot").onclick=()=>setMode("book");
+  [0,1,2].forEach(i=>["_d","_s","_e"].forEach(k=>{
+    const el=$("#req"+i+k); if(el) el.onchange=check;
+  }));
   $("#go").onclick=submit;
+}
+function setMode(m){
+  form.mode=m;
+  if(m==="request"){ form.dayType="";form.period="";form.date="";form.time=""; renderSlots(); }
+  $("#slotArea").style.display = m==="request"?"none":"";
+  $("#reqArea").style.display  = m==="request"?"":"none";
+  $("#go").textContent = m==="request"?"送出時段申請":"送出預約";
+  check();
+}
+function collectRanges(){
+  const out=[];
+  for(let i=0;i<3;i++){
+    const d=$("#req"+i+"_d"), s=$("#req"+i+"_s"), e=$("#req"+i+"_e");
+    if(d&&s&&e&&d.value&&s.value&&e.value){
+      const l=dLabel(d.value);
+      out.push(`${d.value}${l.wd} ${s.value}–${e.value}`);
+    }
+  }
+  return out;
 }
 
 /* 階梯式選時段：平日/假日 → 早上/下午/晚上 → 對應時間 */
@@ -323,7 +369,10 @@ function renderSlots(){
     form.date=el.dataset.date;form.time=el.dataset.time;renderSlots();check();});
 }
 function check(){
-  const ok=form.name&&form.age&&form.photo&&form.referrer&&form.date&&form.time;
+  const base=form.name&&form.age&&form.photo&&form.referrer;
+  const ok = form.mode==="request"
+    ? (base && collectRanges().length>0)
+    : (base && form.date && form.time);
   const b=$("#go"); if(b) b.disabled=!ok;
 }
 function onPhoto(e){
@@ -347,12 +396,39 @@ function onPhoto(e){
   rd.readAsDataURL(file);
 }
 async function submit(){
-  const b=$("#go"); b.disabled=true; b.textContent="送出中…";
+  const b=$("#go");
+  if(form.mode==="request"){
+    const ranges=collectRanges();
+    if(!ranges.length){alert("請至少填寫一個完整的時段（日期＋開始＋結束時間）");return;}
+    b.disabled=true; b.textContent="送出中…";
+    let res; try{res=await call({action:"request",name:form.name,age:form.age,referrer:form.referrer,photo:form.photo,ranges});}
+      catch(e){res={ok:false,msg:"連線失敗，請稍後再試"};}
+    if(res.ok){ successRequest(ranges); return; }
+    b.disabled=false; b.textContent="送出時段申請";
+    alert(res.msg||"送出失敗，請再試一次");
+    return;
+  }
+  b.disabled=true; b.textContent="送出中…";
   let res; try{res=await call({action:"book",...form});}catch(e){res={ok:false,msg:"連線失敗，請稍後再試"};}
   if(res.ok){ success(res); return; }
   b.disabled=false; b.textContent="送出預約";
   alert(res.msg||"送出失敗，請再試一次");
   if(res.taken) customer(); // 時段被搶走 → 重新載入
+}
+function successRequest(ranges){
+  $("#banner").innerHTML=DEMO?'<div class="demo">預覽模式</div>':'';
+  $("#app").innerHTML=`<div class="wrap"><div class="done">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h2>時段申請已送出</h2>
+    <p style="color:var(--soft)">收到你方便的時間了，我們會另行與你聯繫安排 🌙</p>
+    <div class="recap">
+      <div class="row"><span>姓名</span><span>${esc(form.name)}</span></div>
+      <div class="row"><span>推薦人</span><span style="color:${RCOLOR[form.referrer].hex};font-weight:600">${form.referrer}</span></div>
+      ${ranges.map((r,i)=>`<div class="row"><span>時段 ${i+1}</span><span>${esc(r)}</span></div>`).join("")}
+    </div>
+    <button class="btn ghost" onclick="location.hash='';customer()">回預約頁</button>
+  </div></div>`;
+  form.name=form.age=form.photo="";
 }
 function success(res){
   const l=dLabel(res.date);
@@ -404,7 +480,7 @@ function render(dates){
       if(s.booked){const rc=RCOLOR[s.booking.referrer]||{hex:"#888"};
         return `<div class="aslot bk" style="background:${rc.hex}" data-b='${esc(JSON.stringify({...s.booking,date:g.date,time:s.time}))}'>
           <div class="t">${s.time}</div><div class="n">${esc(s.booking.name)}</div></div>`;}
-      return `<div class="aslot open"><div class="t">${s.time}</div><div class="n">可預約</div></div>`;
+      return `<div class="aslot open" data-open='${esc(JSON.stringify({date:g.date,time:s.time}))}'><div class="t">${s.time}</div><div class="n">可預約</div></div>`;
     }).join("");
     return `<div style="margin-top:20px"><div class="datehd"><span class="d serif" style="font-size:19px">${l.md}</span><span class="w">${l.wd}</span></div>
       <div class="aslots">${cells}</div></div>`;
@@ -413,6 +489,7 @@ function render(dates){
   $("#app").innerHTML=`<div class="wrap">
     <div class="hero" style="padding:34px 0 6px"><div class="kicker">ADMIN</div><h1 class="serif">預約總覽</h1></div>
     <div class="legend">${legend}</div>
+    <div class="hint" style="text-align:center;margin:2px 0 8px">點彩色格＝看明細／取消　·　點灰色「可預約」＝刪除時段</div>
     <div style="display:flex;gap:8px;margin:10px 0">
       <button class="btn gold" id="addBtn" style="font-size:15px;padding:12px">＋ 新增時段</button>
       <button class="btn ghost" id="refresh" style="font-size:15px;padding:12px">重新整理</button>
@@ -425,6 +502,13 @@ function render(dates){
   $("#refresh").onclick=admin;
   $("#addBtn").onclick=toggleAdd;
   document.querySelectorAll(".aslot.bk").forEach(el=>el.onclick=()=>openBooking(JSON.parse(el.dataset.b)));
+  document.querySelectorAll(".aslot.open").forEach(el=>el.onclick=()=>delOpenSlot(JSON.parse(el.dataset.open)));
+}
+async function delOpenSlot(s){
+  const l=dLabel(s.date);
+  if(!confirm(`刪除 ${l.md}${l.wd} ${s.time} 這個「可預約」時段嗎？`))return;
+  let res;try{res=await call({action:"delSlot",pw:ADMIN_PW,date:s.date,time:s.time});}catch(e){res={ok:false};}
+  if(res.ok)admin(); else alert(res.msg||"刪除失敗");
 }
 
 let addTimes=new Set();
