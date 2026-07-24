@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>TATA FLOW 靈魂學 · 七七地赦 鑑定預約</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF6F0; --card:#FFFFFF; --ink:#3A2C3A; --soft:#8A7683; --line:#EBE0DA;
+  --gold:#C9A24E; --aura1:#EAD9E6; --aura2:#DCE7EE; --aura3:#F3E4DC;
+  --tata:#8E6E9E; --tataS:#ECE4F1;
+  --liu:#3F8E86;  --liuS:#DAECE9;
+  --duo:#C67F72;  --duoS:#F5E6E2;
+  --ok:#5C9B7A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  line-height:1.6; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 20px 120px}
+.serif{font-family:"Noto Serif TC",serif}
+
+/* 預覽橫幅 */
+.demo{background:#3A2C3A;color:#F3E4DC;font-size:12.5px;text-align:center;padding:7px 14px;letter-spacing:.3px}
+
+/* Hero */
+.hero{position:relative;text-align:center;padding:46px 20px 30px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:340px;z-index:0;
+  background:radial-gradient(60% 80% at 30% 20%,var(--aura1),transparent 70%),
+             radial-gradient(55% 75% at 80% 30%,var(--aura2),transparent 70%),
+             radial-gradient(50% 70% at 55% 90%,var(--aura3),transparent 70%);
+  filter:blur(6px);opacity:.9}
+.hero>*{position:relative;z-index:1}
+.orbit{width:46px;height:46px;margin:0 auto 14px;position:relative}
+.orbit .ring{position:absolute;inset:0;border:1.5px solid var(--gold);border-radius:50%;opacity:.55;transform:rotate(-18deg) scaleY(.45)}
+.orbit .core{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--gold));box-shadow:0 0 10px rgba(201,162,78,.6)}
+.orbit .moon{position:absolute;top:50%;left:0;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--tata)}
+.kicker{font-size:12px;letter-spacing:4px;color:var(--gold);font-weight:700;margin-bottom:6px}
+.hero h1{font-size:27px;font-weight:600;margin:0 0 8px;letter-spacing:1px}
+.hero p{margin:0;color:var(--soft);font-size:14px}
+
+/* 卡片與步驟 */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;
+  box-shadow:0 1px 0 rgba(58,44,58,.02)}
+.step{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.num{flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;
+  font-size:13px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.step h3{margin:0;font-size:16px;font-weight:600}
+.step .req{color:var(--duo);font-size:12px;margin-left:2px}
+.hint{font-size:12.5px;color:var(--soft);margin:-4px 0 12px 34px}
+
+input[type=text],input[type=number]{
+  width:100%;font:inherit;font-size:16px;padding:13px 14px;border:1.5px solid var(--line);
+  border-radius:12px;background:#FCFAF7;color:var(--ink);outline:none;transition:border-color .15s}
+input:focus{border-color:var(--tata)}
+
+/* 推薦人 */
+.refs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ref{border:1.5px solid var(--line);border-radius:14px;padding:14px 6px;text-align:center;
+  cursor:pointer;background:#FCFAF7;transition:.15s;user-select:none}
+.ref .dot{width:14px;height:14px;border-radius:50%;margin:0 auto 8px}
+.ref .nm{font-weight:600;font-size:15px}
+.ref[data-on="1"]{background:#fff;box-shadow:0 4px 14px rgba(58,44,58,.08)}
+.ref[data-r="塔塔"][data-on="1"]{border-color:var(--tata)}
+.ref[data-r="六六"][data-on="1"]{border-color:var(--liu)}
+.ref[data-r="朵朵"][data-on="1"]{border-color:var(--duo)}
+
+/* 照片 */
+.photo{display:flex;align-items:center;gap:14px}
+.pbtn{flex:0 0 96px;width:96px;height:96px;border-radius:16px;border:1.5px dashed var(--line);
+  background:#FCFAF7;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;color:var(--soft);font-size:12px;overflow:hidden;position:relative}
+.pbtn svg{width:26px;height:26px;stroke:var(--soft);fill:none;stroke-width:1.6}
+.pbtn img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ptext{font-size:12.5px;color:var(--soft)}
+
+/* 時段 */
+.seg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.seg.seg3{grid-template-columns:repeat(3,1fr)}
+.segbtn{border:1.5px solid var(--line);border-radius:12px;padding:13px 4px;text-align:center;
+  font-weight:600;font-size:15.5px;cursor:pointer;background:#FCFAF7;transition:.12s;user-select:none}
+.segbtn.on{background:var(--tata);color:#fff;border-color:var(--tata)}
+.segbtn.off{opacity:.32;cursor:default}
+.dategroup{margin-bottom:16px}
+.datehd{display:flex;align-items:baseline;gap:8px;margin:0 0 10px}
+.datehd .d{font-family:"Noto Serif TC",serif;font-size:18px;font-weight:600}
+.datehd .w{font-size:12.5px;color:var(--soft)}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.slot{border:1.5px solid var(--line);border-radius:11px;padding:10px 4px;text-align:center;
+  font-size:14.5px;cursor:pointer;background:#FCFAF7;transition:.12s;font-variant-numeric:tabular-nums}
+.slot[data-on="1"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.empty{color:var(--soft);font-size:13.5px;text-align:center;padding:14px 0}
+
+/* 送出 */
+.submit{position:sticky;bottom:0;padding:16px 0 22px;background:linear-gradient(transparent,var(--bg) 22%)}
+.btn{width:100%;font:inherit;font-size:17px;font-weight:600;color:#fff;background:var(--ink);
+  border:none;border-radius:14px;padding:16px;cursor:pointer;transition:.15s;letter-spacing:1px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.gold{background:var(--gold)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+
+/* 成功 */
+.done{text-align:center;padding:40px 10px}
+.done .mark{width:70px;height:70px;border-radius:50%;background:var(--tataS);margin:0 auto 20px;
+  display:flex;align-items:center;justify-content:center}
+.done .mark svg{width:34px;height:34px;stroke:var(--tata);fill:none;stroke-width:2.2}
+.done h2{font-family:"Noto Serif TC",serif;font-weight:600;margin:0 0 6px}
+.recap{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:22px 0;text-align:left}
+.recap .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+.recap .row:last-child{border:none}
+.recap .row span:first-child{color:var(--soft)}
+.code{font-family:"Noto Serif TC",serif;letter-spacing:2px;font-weight:700}
+
+/* 後台 */
+.legend{display:flex;gap:16px;justify-content:center;margin:2px 0 6px;font-size:13px;color:var(--soft)}
+.legend b{display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.legend .dot{width:11px;height:11px;border-radius:50%}
+.arow{display:flex;gap:8px;margin:14px 0}
+.aslot{border-radius:11px;padding:9px 6px;text-align:center;font-size:13.5px;border:1.5px solid var(--line)}
+.aslots{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.aslot.open{color:var(--soft);background:#FCFAF7}
+.aslot.bk{cursor:pointer;color:#fff;font-weight:500;border:none}
+.aslot .t{font-variant-numeric:tabular-nums;opacity:.85;font-size:12px}
+.aslot .n{font-weight:600;font-size:14.5px;margin-top:1px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.panel label{font-size:13px;color:var(--soft);display:block;margin:10px 0 5px}
+input[type=date]{width:100%;font:inherit;font-size:16px;padding:12px;border:1.5px solid var(--line);border-radius:11px;background:#FCFAF7;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.chip{border:1.5px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;background:#FCFAF7}
+.chip[data-on="1"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.quick{font-size:12.5px;color:var(--tata);cursor:pointer;text-decoration:underline;margin-right:12px}
+
+/* modal */
+.mask{position:fixed;inset:0;background:rgba(40,28,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.modal{background:var(--card);border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:22px 22px 30px;animation:up .22s ease}
+@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+.modal .ph{width:100%;height:230px;object-fit:cover;border-radius:14px;background:#F0E8E4;margin-bottom:16px}
+.mrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.mrow span:first-child{color:var(--soft)}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:13px;color:#fff}
+.center{text-align:center}
+.spin{width:22px;height:22px;border:2.5px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp .7s linear infinite;margin:40px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.link{color:var(--soft);font-size:12px;text-align:center;padding:24px 0 10px}
+.link a{color:var(--soft)}
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<div id="app"><div class="spin"></div></div>
+
+<script>
+/* ═══════════ 設定 ═══════════ */
+const API = "PASTE_YOUR_APPS_SCRIPT_URL";   // ← 部署後把 Apps Script 網址貼在這裡
+const REFERRERS = ["塔塔","六六","朵朵"];
+const RCOLOR = { "塔塔":{c:"var(--tata)",s:"var(--tataS)",hex:"#8E6E9E"},
+                 "六六":{c:"var(--liu)", s:"var(--liuS)", hex:"#3F8E86"},
+                 "朵朵":{c:"var(--duo)", s:"var(--duoS)", hex:"#C67F72"} };
+const DEMO = API.indexOf("PASTE_") === 0;
+
+/* ═══════════ 後端呼叫（POST text/plain 避開 CORS）═══════════ */
+async function call(payload){
+  if(DEMO) return demo(payload);
+  const r = await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)});
+  return r.json();
+}
+/* 預覽模式假資料 */
+const _demoDates = [
+  {date:"2026-07-25",slots:["14:00","14:30","15:00","15:30","20:00","20:30","21:00","21:30"]},
+  {date:"2026-07-26",slots:["10:30","11:00","14:00","14:30","15:00","15:30","16:00","16:30"]},
+  {date:"2026-08-05",slots:["14:00","14:30","15:00","15:30","20:00","20:30","21:00","21:30"]},
+];
+const _demoBook = {"2026-07-25 14:00":{name:"王小美",age:"38",referrer:"塔塔"},
+                   "2026-07-25 20:00":{name:"陳雅婷",age:"45",referrer:"六六"},
+                   "2026-07-26 11:00":{name:"林淑芬",age:"52",referrer:"朵朵"}};
+function demo(p){
+  if(p.action==="slots")
+    return {ok:true,dates:_demoDates.map(d=>({date:d.date,
+      slots:d.slots.filter(t=>!_demoBook[d.date+" "+t]).map(t=>({time:t}))}))};
+  if(p.action==="admin")
+    return {ok:true,dates:_demoDates.map(d=>({date:d.date,
+      slots:d.slots.map(t=>{const b=_demoBook[d.date+" "+t];
+        return b?{time:t,booked:true,booking:{code:"9P-DEMO",...b,photoId:"",submitted:""}}:{time:t,booked:false};})}))};
+  if(p.action==="book"){const b=_demoBook[p.date+" "+p.time];
+    if(b) return {ok:false,taken:true,msg:"這個時段剛剛被預約了，請重新選擇"};
+    return {ok:true,code:"9P"+Date.now().toString().slice(-6),date:p.date,time:p.time};}
+  if(p.action==="addSlots") return {ok:true,added:p.times.length};
+  if(p.action==="cancel")   return {ok:true};
+  return {ok:false,msg:"demo"};
+}
+
+/* ═══════════ 小工具 ═══════════ */
+const WD = ["日","一","二","三","四","五","六"];
+function dLabel(iso){const [y,m,d]=iso.split("-").map(Number);
+  const wd=WD[new Date(y,m-1,d).getDay()];return {md:m+"/"+d,wd:"（"+wd+"）"};}
+const $=s=>document.querySelector(s);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function banner(){$("#banner").innerHTML = DEMO
+  ? '<div class="demo">預覽模式 · 尚未連接後端（貼上 Apps Script 網址即正式運作）</div>' : '';}
+
+/* ═══════════ 路由 ═══════════ */
+function route(){banner();
+  (location.hash.replace("#","")==="/admin") ? admin() : customer();}
+window.addEventListener("hashchange",route);
+window.addEventListener("DOMContentLoaded",route);
+
+/* ═══════════ 前台：預約 ═══════════ */
+const form = {name:"",age:"",photo:"",referrer:"",dayType:"",period:"",date:"",time:""};
+async function customer(){
+  form.referrer="";form.dayType="";form.period="";form.date="";form.time="";
+  $("#app").innerHTML='<div class="spin"></div>';
+  let res; try{res=await call({action:"slots"});}catch(e){res={ok:false};}
+  const dates = (res&&res.ok)?res.dates:[];
+  AVAIL=[]; dates.forEach(g=>g.slots.forEach(s=>AVAIL.push({date:g.date,time:s.time})));
+
+  $("#app").innerHTML = `
+  <div class="hero">
+    <div class="orbit"><div class="ring"></div><div class="moon"></div><div class="core"></div></div>
+    <div class="kicker">TATA FLOW 靈魂學</div>
+    <h1 class="serif">七七地赦　鑑定預約</h1>
+    <p>留下你的資料與想預約的時段，送出後我們會與你確認。</p>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <div class="step"><div class="num">1</div><h3>姓名<span class="req">＊</span></h3></div>
+      <div class="hint" style="margin-left:0">請填寫本名，勿用暱稱。</div>
+      <input id="f_name" type="text" placeholder="請填寫本名" autocomplete="name">
+    </div>
+    <div class="card">
+      <div class="step"><div class="num">2</div><h3>虛歲<span class="req">＊</span></h3></div>
+      <div class="hint" style="margin-left:0">算法：116 − 出生年（民國）。例如民國 70 年出生 → 46。</div>
+      <input id="f_age" type="number" inputmode="numeric" placeholder="例如 46">
+    </div>
+    <div class="card">
+      <div class="step"><div class="num">3</div><h3>自拍照<span class="req">＊</span></h3></div>
+      <div class="hint" style="margin-left:0">請拍正臉、光線自然，避免過度美肌濾鏡，供老師鑑定參考。</div>
+      <div class="photo">
+        <label class="pbtn" id="pbtn">
+          <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="13" cy="12" r="3.4"/></svg>
+          <span>點一下拍照</span>
+          <input id="f_photo" type="file" accept="image/*" capture="user" hidden>
+        </label>
+        <div class="ptext" id="ptext">尚未上傳</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="step"><div class="num">4</div><h3>推薦人<span class="req">＊</span></h3></div>
+      <div class="refs" id="refs">${REFERRERS.map(r=>`
+        <div class="ref" data-r="${r}" data-on="0">
+          <div class="dot" style="background:${RCOLOR[r].hex}"></div><div class="nm">${r}</div>
+        </div>`).join("")}</div>
+    </div>
+    <div class="card">
+      <div class="step"><div class="num">5</div><h3>選擇時段<span class="req">＊</span></h3></div>
+      <div class="hint" style="margin-left:0">先選平日／假日，再選時段區間，最後挑一個時間。</div>
+      <div id="slotpicker"></div>
+    </div>
+    <div class="submit"><button class="btn" id="go" disabled>送出預約</button></div>
+    <div class="link"><a href="#/admin">後台管理</a></div>
+  </div>`;
+
+  // 綁定
+  $("#f_name").oninput=e=>{form.name=e.target.value.trim();check();};
+  $("#f_age").oninput =e=>{form.age=e.target.value.trim();check();};
+  $("#f_photo").onchange=onPhoto;
+  document.querySelectorAll("#refs .ref").forEach(el=>el.onclick=()=>{
+    document.querySelectorAll("#refs .ref").forEach(x=>x.dataset.on="0");
+    el.dataset.on="1";form.referrer=el.dataset.r;check();});
+  renderSlots();
+  $("#go").onclick=submit;
+}
+
+/* 階梯式選時段：平日/假日 → 早上/下午/晚上 → 對應時間 */
+let AVAIL=[];
+function isWeekend(iso){const [y,m,d]=iso.split("-").map(Number);const w=new Date(y,m-1,d).getDay();return w===0||w===6;}
+function dayTypeOf(iso){return isWeekend(iso)?"假日":"平日";}
+function periodOf(t){const h=parseInt(t.split(":")[0],10);return h<12?"早上":h<18?"下午":"晚上";}
+function renderSlots(){
+  const box=$("#slotpicker"); if(!box) return;
+  if(!AVAIL.length){box.innerHTML='<div class="empty">目前時段都約滿了，稍後再開放新的時段 🌙</div>';return;}
+
+  const days=["平日","假日"];
+  const hasDay=new Set(AVAIL.map(s=>dayTypeOf(s.date)));
+  let html=`<div class="seg">`+days.map(d=>
+    `<div class="segbtn ${form.dayType===d?'on':''} ${hasDay.has(d)?'':'off'}" data-day="${d}">${d}</div>`
+  ).join("")+`</div>`;
+
+  if(form.dayType){
+    const periods=["早上","下午","晚上"];
+    const hasP=new Set(AVAIL.filter(s=>dayTypeOf(s.date)===form.dayType).map(s=>periodOf(s.time)));
+    html+=`<div class="seg seg3">`+periods.map(p=>
+      `<div class="segbtn ${form.period===p?'on':''} ${hasP.has(p)?'':'off'}" data-period="${p}">${p}</div>`
+    ).join("")+`</div>`;
+  }
+
+  if(form.dayType&&form.period){
+    const match=AVAIL.filter(s=>dayTypeOf(s.date)===form.dayType&&periodOf(s.time)===form.period);
+    const byDate={}; match.forEach(s=>{(byDate[s.date]=byDate[s.date]||[]).push(s.time);});
+    const ds=Object.keys(byDate).sort();
+    html+= ds.length? ds.map(d=>{const l=dLabel(d);
+      return `<div class="dategroup"><div class="datehd"><span class="d">${l.md}</span><span class="w">${l.wd}</span></div>
+        <div class="slots">${byDate[d].sort().map(t=>
+          `<div class="slot" data-date="${d}" data-time="${t}" data-on="${form.date===d&&form.time===t?1:0}">${t}</div>`).join("")}</div></div>`;
+    }).join("") : '<div class="empty">這個區間目前沒有名額，換一個試試 🌙</div>';
+  } else if(form.dayType){
+    html+='<div class="hint" style="margin:2px 0 0">請選擇時段區間</div>';
+  } else {
+    html+='<div class="hint" style="margin:2px 0 0">請先選擇平日或假日</div>';
+  }
+
+  box.innerHTML=html;
+  box.querySelectorAll('[data-day]').forEach(el=>{ if(el.classList.contains('off'))return;
+    el.onclick=()=>{form.dayType=el.dataset.day;form.period="";form.date="";form.time="";renderSlots();check();};});
+  box.querySelectorAll('[data-period]').forEach(el=>{ if(el.classList.contains('off'))return;
+    el.onclick=()=>{form.period=el.dataset.period;form.date="";form.time="";renderSlots();check();};});
+  box.querySelectorAll('.slot').forEach(el=>el.onclick=()=>{
+    form.date=el.dataset.date;form.time=el.dataset.time;renderSlots();check();});
+}
+function check(){
+  const ok=form.name&&form.age&&form.photo&&form.referrer&&form.date&&form.time;
+  const b=$("#go"); if(b) b.disabled=!ok;
+}
+function onPhoto(e){
+  const file=e.target.files[0]; if(!file) return;
+  $("#ptext").textContent="處理中…";
+  const img=new Image(), rd=new FileReader();
+  rd.onload=()=>{img.onload=()=>{
+    const max=900, sc=Math.min(1,max/Math.max(img.width,img.height));
+    const cv=document.createElement("canvas");
+    cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+    cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+    form.photo=cv.toDataURL("image/jpeg",0.82);
+    $("#pbtn").innerHTML=`<img src="${form.photo}" alt="預覽">`;
+    $("#ptext").textContent="已上傳，可點照片重拍";
+    $("#pbtn").querySelector==null||($("#pbtn").onclick=null);
+    // 讓再次點擊可重選
+    const ni=document.createElement("input");ni.type="file";ni.accept="image/*";ni.setAttribute("capture","user");ni.hidden=true;
+    ni.onchange=onPhoto;$("#pbtn").appendChild(ni);$("#pbtn").onclick=()=>ni.click();
+    check();
+  };img.src=rd.result;};
+  rd.readAsDataURL(file);
+}
+async function submit(){
+  const b=$("#go"); b.disabled=true; b.textContent="送出中…";
+  let res; try{res=await call({action:"book",...form});}catch(e){res={ok:false,msg:"連線失敗，請稍後再試"};}
+  if(res.ok){ success(res); return; }
+  b.disabled=false; b.textContent="送出預約";
+  alert(res.msg||"送出失敗，請再試一次");
+  if(res.taken) customer(); // 時段被搶走 → 重新載入
+}
+function success(res){
+  const l=dLabel(res.date);
+  $("#banner").innerHTML=DEMO?'<div class="demo">預覽模式</div>':'';
+  $("#app").innerHTML=`<div class="wrap"><div class="done">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h2>預約已送出</h2>
+    <p style="color:var(--soft)">我們會盡快與你確認，感謝你 🌙</p>
+    <div class="recap">
+      <div class="row"><span>預約編號</span><span class="code">${res.code}</span></div>
+      <div class="row"><span>姓名</span><span>${esc(form.name)}</span></div>
+      <div class="row"><span>推薦人</span><span style="color:${RCOLOR[form.referrer].hex};font-weight:600">${form.referrer}</span></div>
+      <div class="row"><span>時段</span><span>${l.md}${l.wd} ${res.time}</span></div>
+    </div>
+    <button class="btn ghost" onclick="location.hash='';customer()">再約一筆</button>
+  </div></div>`;
+  form.name=form.age=form.photo="";
+}
+
+/* ═══════════ 後台：行事曆 ═══════════ */
+let ADMIN_PW="";
+async function admin(){
+  if(!ADMIN_PW){ return gate(); }
+  $("#app").innerHTML='<div class="spin"></div>';
+  let res; try{res=await call({action:"admin",pw:ADMIN_PW});}catch(e){res={ok:false,msg:"連線失敗"};}
+  if(!res.ok){ ADMIN_PW=""; return gate(res.msg); }
+  render(res.dates);
+}
+function gate(err){
+  $("#app").innerHTML=`<div class="wrap"><div class="hero" style="padding-top:60px">
+    <div class="kicker">ADMIN</div><h1 class="serif">後台管理</h1></div>
+    <div class="card">
+      <div class="step"><h3>請輸入密碼</h3></div>
+      <input id="pw" type="text" placeholder="管理密碼" autocomplete="off">
+      ${err?`<div class="hint" style="color:var(--duo);margin-left:0">${esc(err)}</div>`:""}
+      <div style="height:14px"></div>
+      <button class="btn" id="pwgo">進入</button>
+    </div>
+    <div class="link"><a href="#/">← 回預約頁</a></div></div>`;
+  $("#pw").onkeydown=e=>{if(e.key==="Enter")enter();};
+  $("#pwgo").onclick=enter;
+  function enter(){ADMIN_PW=$("#pw").value.trim(); if(ADMIN_PW) admin();}
+}
+function render(dates){
+  const legend=REFERRERS.map(r=>`<b><span class="dot" style="background:${RCOLOR[r].hex}"></span>${r}</b>`).join("");
+  const groups=(dates||[]).map(g=>{
+    const l=dLabel(g.date);
+    const cells=g.slots.map(s=>{
+      if(s.booked){const rc=RCOLOR[s.booking.referrer]||{hex:"#888"};
+        return `<div class="aslot bk" style="background:${rc.hex}" data-b='${esc(JSON.stringify({...s.booking,date:g.date,time:s.time}))}'>
+          <div class="t">${s.time}</div><div class="n">${esc(s.booking.name)}</div></div>`;}
+      return `<div class="aslot open"><div class="t">${s.time}</div><div class="n">可預約</div></div>`;
+    }).join("");
+    return `<div style="margin-top:20px"><div class="datehd"><span class="d serif" style="font-size:19px">${l.md}</span><span class="w">${l.wd}</span></div>
+      <div class="aslots">${cells}</div></div>`;
+  }).join("");
+
+  $("#app").innerHTML=`<div class="wrap">
+    <div class="hero" style="padding:34px 0 6px"><div class="kicker">ADMIN</div><h1 class="serif">預約總覽</h1></div>
+    <div class="legend">${legend}</div>
+    <div style="display:flex;gap:8px;margin:10px 0">
+      <button class="btn gold" id="addBtn" style="font-size:15px;padding:12px">＋ 新增時段</button>
+      <button class="btn ghost" id="refresh" style="font-size:15px;padding:12px">重新整理</button>
+    </div>
+    <div id="addPanel"></div>
+    ${groups||'<div class="empty">還沒有任何時段，先新增吧。</div>'}
+    <div class="link"><a href="#/">← 回預約頁</a></div>
+  </div>`;
+
+  $("#refresh").onclick=admin;
+  $("#addBtn").onclick=toggleAdd;
+  document.querySelectorAll(".aslot.bk").forEach(el=>el.onclick=()=>openBooking(JSON.parse(el.dataset.b)));
+}
+
+let addTimes=new Set();
+function toggleAdd(){
+  const p=$("#addPanel");
+  if(p.innerHTML){p.innerHTML="";return;}
+  addTimes=new Set();
+  const common=["10:30","11:00","14:00","14:30","15:00","15:30","16:00","16:30","20:00","20:30","21:00","21:30"];
+  p.innerHTML=`<div class="panel">
+    <label>日期</label><input id="ad_date" type="date">
+    <label>時段（可多選，或用下方快速帶入）</label>
+    <div>
+      <span class="quick" data-q="午">午場 14:00–15:30</span>
+      <span class="quick" data-q="晚">晚場 20:00–21:30</span>
+      <span class="quick" data-q="早">上午 10:30–11:00</span>
+    </div>
+    <div class="chips" id="ad_chips">${common.map(t=>`<span class="chip" data-t="${t}" data-on="0">${t}</span>`).join("")}</div>
+    <div style="height:14px"></div>
+    <button class="btn" id="ad_go">加入時段</button>
+  </div>`;
+  document.querySelectorAll("#ad_chips .chip").forEach(c=>c.onclick=()=>{
+    const t=c.dataset.t; if(addTimes.has(t)){addTimes.delete(t);c.dataset.on="0";}
+    else{addTimes.add(t);c.dataset.on="1";}});
+  document.querySelectorAll(".quick").forEach(q=>q.onclick=()=>{
+    const map={"午":["14:00","14:30","15:00","15:30"],"晚":["20:00","20:30","21:00","21:30"],"早":["10:30","11:00"]};
+    map[q.dataset.q].forEach(t=>{addTimes.add(t);
+      const c=document.querySelector(`#ad_chips .chip[data-t="${t}"]`); if(c)c.dataset.on="1";});});
+  $("#ad_go").onclick=doAdd;
+}
+async function doAdd(){
+  const date=$("#ad_date").value;
+  if(!date){alert("請先選日期");return;}
+  if(!addTimes.size){alert("請至少選一個時段");return;}
+  const b=$("#ad_go");b.disabled=true;b.textContent="加入中…";
+  let res;try{res=await call({action:"addSlots",pw:ADMIN_PW,date,times:[...addTimes]});}catch(e){res={ok:false};}
+  if(res.ok){admin();} else {b.disabled=false;b.textContent="加入時段";alert(res.msg||"加入失敗");}
+}
+function photoUrl(id){return id?`https://drive.google.com/thumbnail?id=${id}&sz=w600`:"";}
+function openBooking(b){
+  const rc=RCOLOR[b.referrer]||{hex:"#888"};
+  const l=dLabel(b.date);
+  const img=b.photoId?`<img class="ph" src="${photoUrl(b.photoId)}" alt="自拍照">`
+    :`<div class="ph" style="display:flex;align-items:center;justify-content:center;color:var(--soft)">（無照片）</div>`;
+  const m=document.createElement("div");m.className="mask";
+  m.innerHTML=`<div class="modal">
+    ${img}
+    <div class="mrow"><span>姓名</span><span style="font-weight:600">${esc(b.name)}</span></div>
+    <div class="mrow"><span>虛歲</span><span>${esc(b.age)}</span></div>
+    <div class="mrow"><span>推薦人</span><span class="tag" style="background:${rc.hex}">${esc(b.referrer)}</span></div>
+    <div class="mrow"><span>時段</span><span>${l.md}${l.wd} ${b.time}</span></div>
+    <div class="mrow"><span>預約編號</span><span class="code">${esc(b.code)}</span></div>
+    ${b.submitted?`<div class="mrow"><span>送出時間</span><span style="color:var(--soft);font-size:13px">${esc(b.submitted)}</span></div>`:""}
+    <div style="height:18px"></div>
+    <button class="btn ghost" id="mclose">關閉</button>
+    <div style="height:8px"></div>
+    <button class="btn" style="background:var(--duo)" id="mcancel">取消這筆預約</button>
+  </div>`;
+  m.onclick=e=>{if(e.target===m)m.remove();};
+  document.body.appendChild(m);
+  m.querySelector("#mclose").onclick=()=>m.remove();
+  m.querySelector("#mcancel").onclick=async()=>{
+    if(!confirm(`確定要取消 ${b.name} 的預約嗎？此時段會重新開放。`))return;
+    const btn=m.querySelector("#mcancel");btn.disabled=true;btn.textContent="取消中…";
+    let res;try{res=await call({action:"cancel",pw:ADMIN_PW,code:b.code});}catch(e){res={ok:false};}
+    m.remove(); if(res.ok)admin(); else alert(res.msg||"取消失敗");
+  };
+}
+</script>
+</body>
+</html>
