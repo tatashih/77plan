@@ -125,7 +125,11 @@ input:focus{border-color:var(--tata)}
 .aslot{border-radius:11px;padding:9px 6px;text-align:center;font-size:13.5px;border:1.5px solid var(--line)}
 .aslots{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .aslot.open{color:var(--soft);background:#FCFAF7;cursor:pointer}
-.aslot.bk{cursor:pointer;color:#fff;font-weight:500;border:none}
+.aslot.bk{cursor:pointer;color:#fff;font-weight:500;border:none;position:relative}
+.aslot.pend{box-shadow:inset 0 0 0 2px rgba(255,255,255,.75)}
+.aslot .badge{display:inline-block;margin-top:3px;font-size:10px;background:rgba(255,255,255,.32);color:#fff;border-radius:8px;padding:1px 7px}
+.cur{text-align:center;color:var(--soft);font-size:14px;line-height:1.9}
+.cur b{color:var(--ink);font-size:18px;font-family:"Noto Serif TC",serif}
 .aslot .t{font-variant-numeric:tabular-nums;opacity:.85;font-size:12px}
 .aslot .n{font-weight:600;font-size:14.5px;margin-top:1px}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
@@ -198,6 +202,9 @@ function demo(p){
     if(b) return {ok:false,taken:true,msg:"這個時段剛剛被預約了，請重新選擇"};
     return {ok:true,code:"9P"+Date.now().toString().slice(-6),date:p.date,time:p.time};}
   if(p.action==="request") return {ok:true};
+  if(p.action==="confirm") return {ok:true};
+  if(p.action==="getBooking") return {ok:true,booking:{code:"9P-DEMO",name:"王小美",date:"2026-07-25",time:"14:00",referrer:"塔塔",status:"已確認"}};
+  if(p.action==="reschedule") return {ok:true,date:p.date,time:p.time};
   if(p.action==="addSlots") return {ok:true,added:p.times.length};
   if(p.action==="delSlot")  return {ok:true};
   if(p.action==="cancel")   return {ok:true};
@@ -215,12 +222,15 @@ function banner(){$("#banner").innerHTML = DEMO
 
 /* ═══════════ 路由 ═══════════ */
 function route(){banner();
-  (location.hash.replace("#","")==="/admin") ? admin() : customer();}
+  const h=location.hash.replace("#","");
+  if(h==="/admin") return admin();
+  if(h.indexOf("/edit")===0) return editPage();
+  customer();}
 window.addEventListener("hashchange",route);
 window.addEventListener("DOMContentLoaded",route);
 
 /* ═══════════ 前台：預約 ═══════════ */
-const form = {name:"",age:"",photo:"",referrer:"",dayType:"",period:"",date:"",time:"",mode:"book"};
+const form = {name:"",email:"",age:"",photo:"",referrer:"",dayType:"",period:"",date:"",time:"",mode:"book"};
 async function customer(){
   form.referrer="";form.dayType="";form.period="";form.date="";form.time="";form.mode="book";
   $("#app").innerHTML='<div class="spin"></div>';
@@ -242,12 +252,17 @@ async function customer(){
       <input id="f_name" type="text" placeholder="請填寫本名" autocomplete="name">
     </div>
     <div class="card">
-      <div class="step"><div class="num">2</div><h3>虛歲<span class="req">＊</span></h3></div>
+      <div class="step"><div class="num">2</div><h3>Email<span class="req">＊</span></h3></div>
+      <div class="hint" style="margin-left:0">預約成功通知與日後改期連結都會寄到這裡，請務必填正確。</div>
+      <input id="f_email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="card">
+      <div class="step"><div class="num">3</div><h3>虛歲<span class="req">＊</span></h3></div>
       <div class="hint" style="margin-left:0">算法：116 − 出生年（民國）。例如民國 70 年出生 → 46。</div>
       <input id="f_age" type="number" inputmode="numeric" placeholder="例如 46">
     </div>
     <div class="card">
-      <div class="step"><div class="num">3</div><h3>自拍照<span class="req">＊</span></h3></div>
+      <div class="step"><div class="num">4</div><h3>自拍照<span class="req">＊</span></h3></div>
       <div class="hint" style="margin-left:0">請拍正臉、光線自然，避免過度美肌濾鏡，供老師鑑定參考。</div>
       <div class="photo">
         <label class="pbtn" id="pbtn">
@@ -259,14 +274,14 @@ async function customer(){
       </div>
     </div>
     <div class="card">
-      <div class="step"><div class="num">4</div><h3>推薦人<span class="req">＊</span></h3></div>
+      <div class="step"><div class="num">5</div><h3>推薦人<span class="req">＊</span></h3></div>
       <div class="refs" id="refs">${REFERRERS.map(r=>`
         <div class="ref" data-r="${r}" data-on="0">
           <div class="dot" style="background:${RCOLOR[r].hex}"></div><div class="nm">${r}</div>
         </div>`).join("")}</div>
     </div>
     <div class="card">
-      <div class="step"><div class="num">5</div><h3>選擇時段<span class="req">＊</span></h3></div>
+      <div class="step"><div class="num">6</div><h3>選擇時段<span class="req">＊</span></h3></div>
       <div id="slotArea">
         <div class="hint" style="margin-left:0">先選平日／假日，再選時段區間，最後挑一個時間。</div>
         <div id="slotpicker"></div>
@@ -288,6 +303,7 @@ async function customer(){
 
   // 綁定
   $("#f_name").oninput=e=>{form.name=e.target.value.trim();check();};
+  $("#f_email").oninput=e=>{form.email=e.target.value.trim();check();};
   $("#f_age").oninput =e=>{form.age=e.target.value.trim();check();};
   $("#f_photo").onchange=onPhoto;
   document.querySelectorAll("#refs .ref").forEach(el=>el.onclick=()=>{
@@ -369,11 +385,13 @@ function renderSlots(){
     form.date=el.dataset.date;form.time=el.dataset.time;renderSlots();check();});
 }
 function check(){
-  const base=form.name&&form.age&&form.photo&&form.referrer;
+  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email||"");
+  const base=form.name&&emailOk&&form.age&&form.photo&&form.referrer;
   const ok = form.mode==="request"
     ? (base && collectRanges().length>0)
     : (base && form.date && form.time);
   const b=$("#go"); if(b) b.disabled=!ok;
+  const r=$("#rego"); if(r) r.disabled=!(form.date&&form.time);
 }
 function onPhoto(e){
   const file=e.target.files[0]; if(!file) return;
@@ -401,7 +419,7 @@ async function submit(){
     const ranges=collectRanges();
     if(!ranges.length){alert("請至少填寫一個完整的時段（日期＋開始＋結束時間）");return;}
     b.disabled=true; b.textContent="送出中…";
-    let res; try{res=await call({action:"request",name:form.name,age:form.age,referrer:form.referrer,photo:form.photo,ranges});}
+    let res; try{res=await call({action:"request",name:form.name,email:form.email,age:form.age,referrer:form.referrer,photo:form.photo,ranges});}
       catch(e){res={ok:false,msg:"連線失敗，請稍後再試"};}
     if(res.ok){ successRequest(ranges); return; }
     b.disabled=false; b.textContent="送出時段申請";
@@ -428,7 +446,69 @@ function successRequest(ranges){
     </div>
     <button class="btn ghost" onclick="location.hash='';customer()">回預約頁</button>
   </div></div>`;
-  form.name=form.age=form.photo="";
+  form.name=form.email=form.age=form.photo="";
+}
+
+/* ═══════════ 會員自助改期（從成功信的連結進來）═══════════ */
+let EDIT={token:""};
+function editError(msg){
+  return `<div class="wrap"><div class="done">
+    <h2 style="font-family:'Noto Serif TC',serif">無法載入</h2>
+    <p style="color:var(--soft)">${esc(msg)}</p>
+    <button class="btn ghost" onclick="location.hash='';customer()">回預約首頁</button>
+  </div></div>`;
+}
+async function editPage(){
+  const t=(location.hash.match(/[?&]t=([^&]+)/)||[])[1]||"";
+  EDIT={token:t};
+  $("#app").innerHTML='<div class="spin"></div>';
+  if(!t){ $("#app").innerHTML=editError("連結無效或已過期。"); return; }
+  let bk; try{bk=await call({action:"getBooking",token:t});}catch(e){bk={ok:false,msg:"連線失敗，請稍後再試"};}
+  if(!bk.ok){ $("#app").innerHTML=editError(bk.msg||"找不到這筆預約。"); return; }
+  let sl; try{sl=await call({action:"slots"});}catch(e){sl={ok:false};}
+  const dates=(sl&&sl.ok)?sl.dates:[];
+  AVAIL=[]; dates.forEach(g=>g.slots.forEach(s=>AVAIL.push({date:g.date,time:s.time})));
+  form.dayType="";form.period="";form.date="";form.time="";form.mode="edit";
+
+  const cur=bk.booking, l=dLabel(cur.date);
+  $("#app").innerHTML=`
+  <div class="hero">
+    <div class="orbit"><div class="ring"></div><div class="moon"></div><div class="core"></div></div>
+    <div class="kicker">TATA FLOW 靈魂學</div>
+    <h1 class="serif">修改預約時段</h1>
+    <p>${esc(cur.name)} 你好，挑一個新的時段即可。</p>
+  </div>
+  <div class="wrap">
+    <div class="card"><div class="cur">目前時段<br><b>${l.md}${l.wd} ${cur.time}</b></div></div>
+    <div class="card">
+      <div class="step"><div class="num">＋</div><h3>選擇新的時段</h3></div>
+      <div class="hint" style="margin-left:0">先選平日／假日，再選時段區間，最後挑一個時間。</div>
+      <div id="slotpicker"></div>
+    </div>
+    <div class="submit"><button class="btn" id="rego" disabled>確認改到新時段</button></div>
+    <div class="link"><a href="#/">回預約首頁</a></div>
+  </div>`;
+  renderSlots();
+  $("#rego").onclick=async()=>{
+    if(!(form.date&&form.time)){alert("請先選一個新的時段");return;}
+    const btn=$("#rego"); btn.disabled=true; btn.textContent="送出中…";
+    let res; try{res=await call({action:"reschedule",token:EDIT.token,date:form.date,time:form.time});}
+      catch(e){res={ok:false,msg:"連線失敗，請稍後再試"};}
+    if(res.ok){ editDone(res); return; }
+    btn.disabled=false; btn.textContent="確認改到新時段";
+    alert(res.msg||"改期失敗");
+    if(res.taken) editPage();
+  };
+}
+function editDone(res){
+  const l=dLabel(res.date);
+  $("#app").innerHTML=`<div class="wrap"><div class="done">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h2>時段已更新</h2>
+    <p style="color:var(--soft)">新的時段已為你保留，也會寄一封確認信給你 🌙</p>
+    <div class="recap"><div class="row"><span>新時段</span><span>${l.md}${l.wd} ${res.time}</span></div></div>
+    <button class="btn ghost" onclick="location.hash='';customer()">回預約首頁</button>
+  </div></div>`;
 }
 function success(res){
   const l=dLabel(res.date);
@@ -445,7 +525,7 @@ function success(res){
     </div>
     <button class="btn ghost" onclick="location.hash='';customer()">再約一筆</button>
   </div></div>`;
-  form.name=form.age=form.photo="";
+  form.name=form.email=form.age=form.photo="";
 }
 
 /* ═══════════ 後台：行事曆 ═══════════ */
@@ -478,8 +558,9 @@ function render(dates){
     const l=dLabel(g.date);
     const cells=g.slots.map(s=>{
       if(s.booked){const rc=RCOLOR[s.booking.referrer]||{hex:"#888"};
-        return `<div class="aslot bk" style="background:${rc.hex}" data-b='${esc(JSON.stringify({...s.booking,date:g.date,time:s.time}))}'>
-          <div class="t">${s.time}</div><div class="n">${esc(s.booking.name)}</div></div>`;}
+        const pend=(s.booking.status||"待確認")!=="已確認";
+        return `<div class="aslot bk ${pend?'pend':''}" style="background:${rc.hex}" data-b='${esc(JSON.stringify({...s.booking,date:g.date,time:s.time}))}'>
+          <div class="t">${s.time}${pend?'':' ✓'}</div><div class="n">${esc(s.booking.name)}</div>${pend?'<div class="badge">待確認</div>':''}</div>`;}
       return `<div class="aslot open" data-open='${esc(JSON.stringify({date:g.date,time:s.time}))}'><div class="t">${s.time}</div><div class="n">可預約</div></div>`;
     }).join("");
     return `<div style="margin-top:20px"><div class="datehd"><span class="d serif" style="font-size:19px">${l.md}</span><span class="w">${l.wd}</span></div>
@@ -489,7 +570,7 @@ function render(dates){
   $("#app").innerHTML=`<div class="wrap">
     <div class="hero" style="padding:34px 0 6px"><div class="kicker">ADMIN</div><h1 class="serif">預約總覽</h1></div>
     <div class="legend">${legend}</div>
-    <div class="hint" style="text-align:center;margin:2px 0 8px">點彩色格＝看明細／取消　·　點灰色「可預約」＝刪除時段</div>
+    <div class="hint" style="text-align:center;margin:2px 0 8px">點彩色格看明細（待確認可在裡面按確認）　·　點灰色「可預約」可刪除時段</div>
     <div style="display:flex;gap:8px;margin:10px 0">
       <button class="btn gold" id="addBtn" style="font-size:15px;padding:12px">＋ 新增時段</button>
       <button class="btn ghost" id="refresh" style="font-size:15px;padding:12px">重新整理</button>
@@ -550,18 +631,22 @@ function photoUrl(id){return id?`https://drive.google.com/thumbnail?id=${id}&sz=
 function openBooking(b){
   const rc=RCOLOR[b.referrer]||{hex:"#888"};
   const l=dLabel(b.date);
+  const pend=(b.status||"待確認")!=="已確認";
   const img=b.photoId?`<img class="ph" src="${photoUrl(b.photoId)}" alt="自拍照">`
     :`<div class="ph" style="display:flex;align-items:center;justify-content:center;color:var(--soft)">（無照片）</div>`;
   const m=document.createElement("div");m.className="mask";
   m.innerHTML=`<div class="modal">
     ${img}
+    <div class="mrow"><span>狀態</span><span style="font-weight:600;color:${pend?'var(--duo)':'var(--ok)'}">${pend?'待確認':'已確認'}</span></div>
     <div class="mrow"><span>姓名</span><span style="font-weight:600">${esc(b.name)}</span></div>
     <div class="mrow"><span>虛歲</span><span>${esc(b.age)}</span></div>
     <div class="mrow"><span>推薦人</span><span class="tag" style="background:${rc.hex}">${esc(b.referrer)}</span></div>
     <div class="mrow"><span>時段</span><span>${l.md}${l.wd} ${b.time}</span></div>
+    ${b.email?`<div class="mrow"><span>Email</span><span style="font-size:13px;color:var(--soft)">${esc(b.email)}</span></div>`:""}
     <div class="mrow"><span>預約編號</span><span class="code">${esc(b.code)}</span></div>
     ${b.submitted?`<div class="mrow"><span>送出時間</span><span style="color:var(--soft);font-size:13px">${esc(b.submitted)}</span></div>`:""}
     <div style="height:18px"></div>
+    ${pend?`<button class="btn" id="mconfirm">確認預約，寄成功通知給會員</button><div style="height:8px"></div>`:""}
     <button class="btn ghost" id="mclose">關閉</button>
     <div style="height:8px"></div>
     <button class="btn" style="background:var(--duo)" id="mcancel">取消這筆預約</button>
@@ -569,6 +654,11 @@ function openBooking(b){
   m.onclick=e=>{if(e.target===m)m.remove();};
   document.body.appendChild(m);
   m.querySelector("#mclose").onclick=()=>m.remove();
+  if(pend) m.querySelector("#mconfirm").onclick=async()=>{
+    const btn=m.querySelector("#mconfirm");btn.disabled=true;btn.textContent="確認中…";
+    let res;try{res=await call({action:"confirm",pw:ADMIN_PW,code:b.code});}catch(e){res={ok:false};}
+    m.remove(); if(res.ok)admin(); else alert(res.msg||"確認失敗");
+  };
   m.querySelector("#mcancel").onclick=async()=>{
     if(!confirm(`確定要取消 ${b.name} 的預約嗎？此時段會重新開放。`))return;
     const btn=m.querySelector("#mcancel");btn.disabled=true;btn.textContent="取消中…";
