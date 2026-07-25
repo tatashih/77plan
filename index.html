@@ -172,7 +172,7 @@ const API = "https://script.google.com/macros/s/AKfycbwVLQ4Wpyg6blC377EosKoWHU9b
 /* 分組：每組一位主鑑定師 + 助理（要與 Code.gs 的 GROUPS 一致）*/
 const GROUPS = [
   { reader:"塔塔",  helpers:["六六","朵朵"] },
-  { reader:"Joyer", helpers:["Alice"] }
+  { reader:"Joyer", helpers:["Alice"], requireHelpers:true }
 ];
 const REFERRERS = [];
 GROUPS.forEach(g=>{ REFERRERS.push(g.reader); g.helpers.forEach(h=>REFERRERS.push(h)); });
@@ -205,9 +205,12 @@ const _demoBook = {
   "塔塔|2026-07-25 20:00":{name:"陳雅婷",age:"45",referrer:"六六"},
   "Joyer|2026-07-25 16:00":{name:"李大明",age:"50",referrer:"Alice"}
 };
-function _flagsFor(reader,t){ // 誰可搭配（demo：早上助理可、其他都可）
+function _flagsFor(reader,t){ // 誰可搭配
   const g=GROUPS.find(x=>x.reader===reader), co={}; const h=parseInt(t,10);
-  (g?g.helpers:[]).forEach((hp,i)=> co[hp]= h<12 ? (i===0) : true );
+  (g?g.helpers:[]).forEach((hp,i)=>{
+    if(reader==="Joyer") co[hp]=(t!=="19:00");   // demo：Alice 19:00 沒空 → Joyer 該時段也不可約
+    else co[hp]= h<12 ? (i===0) : true;
+  });
   return co;
 }
 function _readerDates(reader){ return reader==="Joyer"?_demoJoyer:_demoTata; }
@@ -391,12 +394,16 @@ function renderSlots(){
   if(!AVAIL.length){box.innerHTML='<div class="empty">目前時段都約滿了，稍後再開放新的時段 🌙</div>';return;}
   if(!form.referrer){box.innerHTML='<div class="hint" style="margin:2px 0 0">請先於上方「推薦人」選擇，才會顯示對應的可預約時段。</div>';return;}
 
-  // 依推薦人所屬鑑定師比對：主鑑定師＝該鑑定師全部時段；助理＝該鑑定師時段且自己也有空
-  const rd=readerOf(form.referrer);
-  const pool=AVAIL.filter(s=> s.reader===rd && (isReader(form.referrer) ? true : !!(s.co && s.co[form.referrer])));
-  const note=isReader(form.referrer)
-    ? `以下為${form.referrer}可鑑定的時段`
-    : `以下為${rd}＋${form.referrer}都可以的時段`;
+  // 依推薦人所屬鑑定師比對；requireHelpers 的組別，本人也一定要助理都有空
+  const g=groupOf(form.referrer), rd=g.reader;
+  const pool=AVAIL.filter(s=>{
+    if(s.reader!==rd) return false;
+    if(g.requireHelpers) return g.helpers.every(h=> s.co && s.co[h]);
+    return isReader(form.referrer) ? true : !!(s.co && s.co[form.referrer]);
+  });
+  const note=g.requireHelpers
+    ? `以下為${rd}＋${g.helpers.join("、")}都可以的時段`
+    : (isReader(form.referrer) ? `以下為${form.referrer}可鑑定的時段` : `以下為${rd}＋${form.referrer}都可以的時段`);
   if(!pool.length){box.innerHTML=`<div class="empty">目前沒有「${note.replace("以下為","")}」的名額，稍後再開放 🌙`+(form.mode==="edit"?"":"，或用下方「另行申請」")+`。</div>`;return;}
 
   const days=["平日","假日"];
@@ -593,6 +600,7 @@ async function admin(){
 }
 function gate(err){
   ADMIN_PW="";ME=null;
+  ADMIN_PW="";ME=null;
   $("#app").innerHTML=`<div class="wrap"><div class="hero" style="padding-top:60px">
     <div class="kicker">ADMIN</div><h1 class="serif">夥伴登入</h1><p>輸入你的登入碼</p></div>
     <div class="card">
@@ -613,6 +621,7 @@ function gate(err){
     else { btn.disabled=false;btn.textContent="登入"; gate(res.msg||"登入碼錯誤"); }
   }
 }
+function logout(){ ADMIN_PW=""; ME=null; location.hash="#/admin"; gate(); }
 function render(dates){
   const myHelpers=(ME&&ME.helpers)||[];
   const legend=[ME.name,...myHelpers].map(r=>`<b><span class="dot" style="background:${(RCOLOR[r]||{hex:'#888'}).hex}"></span>${r}</b>`).join("");
@@ -641,10 +650,11 @@ function render(dates){
     </div>
     <div id="addPanel"></div>
     ${groups||'<div class="empty">還沒有任何時段，先新增吧。</div>'}
-    <div class="link"><a href="#/">← 回預約頁</a>　·　<a href="#/admin" onclick="ADMIN_PW='';ME=null">登出</a></div>
+    <div class="link"><a href="#/">← 回預約頁</a>　·　<a href="#/admin" class="dologout">登出</a></div>
   </div>`;
 
   $("#refresh").onclick=admin;
+  document.querySelectorAll(".dologout").forEach(el=>el.onclick=(e)=>{e.preventDefault();logout();});
   $("#addBtn").onclick=toggleAdd;
   document.querySelectorAll(".aslot.bk").forEach(el=>el.onclick=()=>openBooking(JSON.parse(el.dataset.b)));
   document.querySelectorAll(".aslot.open").forEach(el=>el.onclick=()=>openSlotMenu(JSON.parse(el.dataset.open)));
@@ -688,10 +698,11 @@ function renderHelper(name, dates, bookings){
       <div class="hint" style="margin-left:0">點一筆可看明細、確認或取消。</div>
       ${list}
     </div>
-    <div class="link"><a href="#/">← 回預約頁</a>　·　<a href="#/admin" onclick="ADMIN_PW='';ME=null">登出</a></div>
+    <div class="link"><a href="#/">← 回預約頁</a>　·　<a href="#/admin" class="dologout">登出</a></div>
   </div>`;
 
   $("#refresh").onclick=admin;
+  document.querySelectorAll(".dologout").forEach(el=>el.onclick=(e)=>{e.preventDefault();logout();});
   document.querySelectorAll(".mavail").forEach(el=>el.onclick=async()=>{
     const on=el.dataset.on==="1", nv=!on;
     el.dataset.on=nv?1:0;
@@ -812,7 +823,7 @@ function openBooking(b){
   if(pend) m.querySelector("#mconfirm").onclick=async()=>{
     const btn=m.querySelector("#mconfirm");btn.disabled=true;btn.textContent="確認中…";
     let res;try{res=await call({action:"confirm",pw:ADMIN_PW,code:b.code});}catch(e){res={ok:false};}
-    m.remove(); if(res.ok)admin(); else alert(res.msg||"確認失敗");
+    m.remove(); if(res.ok){ if(res.warn) alert(res.warn); admin(); } else alert(res.msg||"確認失敗");
   };
   m.querySelector("#mcancel").onclick=async()=>{
     if(!confirm(`確定要取消 ${b.name} 的預約嗎？此時段會重新開放。`))return;
