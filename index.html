@@ -698,13 +698,13 @@ async function customer(){
       <input id="f_age" type="number" inputmode="numeric" placeholder="例如 46">
     </div>
     <div class="card">
-      <div class="step"><div class="num">4</div><h3>自拍照<span class="req">＊</span></h3></div>
-      <div class="hint" style="margin-left:0">請拍正臉、光線自然，避免過度美肌濾鏡，供老師鑑定參考。</div>
+      <div class="step"><div class="num">4</div><h3>上傳照片or直接拍攝皆可<span class="req">＊</span></h3></div>
+      <div class="hint" style="margin-left:0">可從相簿選擇或直接拍攝；請使用正臉、光線自然的照片，避免過度美肌濾鏡，供老師鑑定參考。</div>
       <div class="photo">
         <label class="pbtn" id="pbtn">
           <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="13" cy="12" r="3.4"/></svg>
-          <span>點一下拍照</span>
-          <input id="f_photo" type="file" accept="image/*" capture="user" hidden>
+          <span>選擇照片或拍攝</span>
+          <input id="f_photo" type="file" accept="image/*" hidden>
         </label>
         <div class="ptext" id="ptext">尚未上傳</div>
       </div>
@@ -858,7 +858,7 @@ function onPhoto(e){
     $("#ptext").textContent="已上傳，可點照片重拍";
     $("#pbtn").querySelector==null||($("#pbtn").onclick=null);
     // 讓再次點擊可重選
-    const ni=document.createElement("input");ni.type="file";ni.accept="image/*";ni.setAttribute("capture","user");ni.hidden=true;
+    const ni=document.createElement("input");ni.type="file";ni.accept="image/*";ni.hidden=true;
     ni.onchange=onPhoto;$("#pbtn").appendChild(ni);$("#pbtn").onclick=()=>ni.click();
     check();
   };img.src=rd.result;};
